@@ -2,6 +2,26 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import redis from './redis';
+
+const purgeCache = async (productId = null) => {
+  if (!redis) return;
+  try {
+    // Instead of keys('*'), we purge the main lists specifically
+    // to avoid performance hits on larger data sets
+    const listKeys = ['products:latest', 'products:price-asc', 'products:price-desc', 'categories'];
+    await redis.del(...listKeys);
+    
+    // Also purge common category views (optional, or let them TTL)
+    // For simplicity with 30MB limit, purging specific lists is safer
+    
+    if (productId) {
+      await redis.del(`product:${productId}`);
+    }
+  } catch (err) {
+    console.error('Redis purge error:', err);
+  }
+};
 
 export async function createProduct(formData) {
   const id = formData.get('id');
@@ -15,6 +35,7 @@ export async function createProduct(formData) {
     data: { id, name, price, category, description, images }
   });
 
+  await purgeCache();
   revalidatePath('/admin/products');
   revalidatePath('/');
 }
@@ -24,6 +45,7 @@ export async function deleteProduct(id) {
     where: { id }
   });
 
+  await purgeCache(id);
   revalidatePath('/admin/products');
   revalidatePath('/');
 }
@@ -40,6 +62,7 @@ export async function updateProduct(id, formData) {
     data: { name, price, category, description, images }
   });
 
+  await purgeCache(id);
   revalidatePath('/admin/products');
   revalidatePath(`/product/${id}`);
 }
