@@ -1,5 +1,5 @@
 {
-  "name": "ecomers-softly",
+  "name": "fitcheck-store",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,16 +8,25 @@
     "start": "next start",
     "lint": "eslint"
   },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "dependencies": {
+    "framer-motion": "^12.33.0",
+    "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
+    "@prisma/client": "^6.0.0",
     "@tailwindcss/postcss": "^4",
     "babel-plugin-react-compiler": "1.0.0",
+    "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "prisma": "^6.0.0",
     "tailwindcss": "^4"
   }
 }

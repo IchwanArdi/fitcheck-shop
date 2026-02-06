@@ -1,65 +1,94 @@
-import Image from "next/image";
+import Link from 'next/link';
+import Image from 'next/image';
+import { getProducts } from '../lib/data';
+import ProductCarousel from '@/components/ProductCarousel';
+import AnimatedPage from '@/components/AnimatedPage';
+import AnimatedGridItem from '@/components/AnimatedGridItem';
 
-export default function Home() {
+export default async function Home() {
+  const products = await getProducts();
+  const mainProducts = products.slice(0, 5);
+  const heroProduct = mainProducts[0] || { id: 'empty', name: 'No Products', price: 0, images: [], description: '' };
+  const gridProducts = mainProducts.slice(1);
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <AnimatedPage>
+      <div className="mx-auto max-w-7xl p-4 md:p-6 pb-20 pt-8"> 
+        
+        {/* Vercel-style Grid with Clean Aesthetic */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 auto-rows-[300px] md:auto-rows-[450px]">
+          
+          {/* Large Hero Item */}
+          <AnimatedGridItem className="lg:col-span-2 row-span-1 md:row-span-1">
+            <div className="relative h-full w-full group block bg-[#111] border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
+                <Link href={`/product/${heroProduct.id}`} className="absolute inset-0 z-10" />
+                
+                <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center p-8">
+                   <Image 
+                     src={heroProduct.images?.[0] || 'https://placehold.co/600x600/111/FFF?text=No+Image'} 
+                     alt={heroProduct.name}
+                     fill
+                     className="object-contain p-8 group-hover:scale-105 transition-transform duration-500 ease-in-out"
+                     priority
+                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 66vw"
+                   />
+                </div>
+                
+                <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8 flex items-center gap-4 z-20">
+                   <div className="bg-black/60 backdrop-blur-md border border-white/10 px-4 py-2 md:px-5 md:py-3 rounded-full text-sm md:text-base font-bold flex items-center gap-3">
+                     <span>{heroProduct.name}</span>
+                     <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                        Rp {new Intl.NumberFormat('id-ID').format(heroProduct.price)}
+                     </div>
+                   </div>
+                </div>
+            </div>
+          </AnimatedGridItem>
+
+          {/* Other Products */}
+          {gridProducts.map((product, i) => (
+             <AnimatedGridItem key={product.id} delay={0.1 * (i + 1)}>
+               <div className="relative h-full w-full group block bg-[#111] border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
+                  <Link href={`/product/${product.id}`} className="absolute inset-0 z-10" />
+                  
+                  <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center p-10">
+                     <Image 
+                       src={product.images?.[0] || 'https://placehold.co/400x400/111/FFF?text=No+Image'} 
+                       alt={product.name}
+                       fill
+                       className="object-contain p-10 group-hover:scale-105 transition-transform duration-500 ease-in-out opacity-90 group-hover:opacity-100"
+                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                     />
+                  </div>
+
+                   <div className="absolute bottom-6 left-6 z-20">
+                     <div className="bg-black/60 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full text-xs md:text-sm font-bold flex items-center gap-2">
+                       <span>{product.name}</span>
+                        <div className="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full">
+                          Rp {new Intl.NumberFormat('id-ID').format(product.price)}
+                       </div>
+                     </div>
+                   </div>
+               </div>
+             </AnimatedGridItem>
+          ))}
+
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+      {/* Shop All Button */}
+      {products.length > 5 && (
+        <div className="mt-12 flex justify-center">
+          <Link 
+            href="/category/all" 
+            className="px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-white/5"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            View Full Catalog
+          </Link>
         </div>
-      </main>
-    </div>
+      )}
+
+      <ProductCarousel products={products} />
+
+      </div>
+    </AnimatedPage>
   );
 }
