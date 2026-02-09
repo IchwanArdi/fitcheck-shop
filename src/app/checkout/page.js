@@ -3,14 +3,14 @@
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, CreditCard, ShieldCheck, Check } from 'lucide-react';
+import { ArrowLeft, Truck, CreditCard, ShieldCheck, Check } from 'lucide-react';
 import { createOrder as createOrderAction } from '@/lib/actions'; // Renamed to avoid conflict
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function CheckoutPage() {
   const { cartItems, cartCount, clearCart } = useCart(); // Removed createOrder from here
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -18,7 +18,6 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [postalCode, setPostalCode] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
   const [orderId, setOrderId] = useState(null);
 
@@ -185,10 +184,10 @@ export default function CheckoutPage() {
             </section>
 
             <button 
-              disabled={isProcessing}
+              disabled={isSubmitting}
               className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {isProcessing ? 'Processing...' : `Pay Rp ${new Intl.NumberFormat('id-ID').format(total)}`}
+              {isSubmitting ? 'Processing...' : `Pay Rp ${new Intl.NumberFormat('id-ID').format(total)}`}
             </button>
           </form>
         </div>
