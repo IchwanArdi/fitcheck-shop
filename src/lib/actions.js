@@ -66,3 +66,28 @@ export async function updateProduct(id, formData) {
   revalidatePath('/admin/products');
   revalidatePath(`/product/${id}`);
 }
+
+export async function createOrder(customerData, items, total) {
+  try {
+    const order = await prisma.order.create({
+      data: {
+        total,
+        customer: customerData,
+        items: {
+          create: items.map(item => ({
+            productId: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity
+          }))
+        }
+      }
+    });
+
+    revalidatePath('/admin/orders');
+    return { success: true, orderId: order.id };
+  } catch (error) {
+    console.error('Order creation error:', error);
+    return { success: false, error: 'Database failed' };
+  }
+}

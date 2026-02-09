@@ -101,7 +101,7 @@ export default function ProductCarousel({ products }) {
                className="block w-64 md:w-80 flex-shrink-0 group/card snap-start pointer-events-auto"
                draggable="false"
              >
-                <div className="bg-[#111] border border-white/5 rounded-2xl aspect-[4/3] overflow-hidden mb-4 relative pointer-events-none">
+                <div className="bg-[#111] border border-white/5 rounded-2xl aspect-[1/1] overflow-hidden mb-4 relative pointer-events-none">
                    <Image 
                      src={product.images?.[0] || 'https://placehold.co/400x400/111/FFF?text=No+Image'} 
                      alt={product.name} 

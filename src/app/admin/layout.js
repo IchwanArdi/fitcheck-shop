@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { LayoutDashboard, ShoppingBag, Users, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Settings, LogOut, Package } from 'lucide-react';
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
@@ -10,13 +10,15 @@ export default function AdminLayout({ children }) {
 
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
-    { name: 'Products', icon: ShoppingBag, href: '/admin/products' },
+    { name: 'Orders', icon: ShoppingBag, href: '/admin/orders' },
+    { name: 'Products', icon: Package, href: '/admin/products' },
     { name: 'Customers', icon: Users, href: '/admin/customers' },
     { name: 'Settings', icon: Settings, href: '/admin/settings' },
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem('isAdmin');
+    // Clear cookie
+    document.cookie = "admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     router.push('/admin/login');
   };
 

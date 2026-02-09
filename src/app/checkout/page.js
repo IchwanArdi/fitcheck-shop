@@ -3,34 +3,83 @@
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, CreditCard, Truck, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, CreditCard, ShieldCheck, Check } from 'lucide-react';
+import { createOrder as createOrderAction } from '@/lib/actions'; // Renamed to avoid conflict
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function CheckoutPage() {
-  const { cartItems, cartCount } = useCart();
+  const { cartItems, cartCount, clearCart } = useCart(); // Removed createOrder from here
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderConfirmed, setOrderConfirmed] = useState(false);
+  const [orderId, setOrderId] = useState(null);
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const shipping = subtotal > 0 ? 25000 : 0; // Flat shipping rate
   const total = subtotal + shipping;
 
-  const handleCheckout = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsProcessing(true);
-    // Simulate API call
-    setTimeout(() => {
-      if (typeof toast !== 'undefined') {
-        toast.success("Order Placed Successfully!", {
-          description: "Thank you for shopping with Fitcheck. Your order is being processed.",
-          icon: <CheckCircle2 className="w-5 h-5 text-green-500" />
-        });
-      }
-      setIsProcessing(false);
-    }, 2000);
+    setIsSubmitting(true);
+    
+    // Simulate payment process and save to DB
+    const customerData = { 
+      name: `${firstName} ${lastName}`, 
+      email, 
+      address, 
+      city, 
+      postalCode 
+    };
+    const result = await createOrderAction(customerData, cartItems, total);
+
+    if (result.success) {
+      setOrderId(result.orderId);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setOrderConfirmed(true);
+        clearCart();
+      }, 1500);
+    } else {
+      setIsSubmitting(false);
+      toast.error("Order failed. Please try again.");
+    }
   };
 
-  if (cartCount === 0 && !isProcessing) {
+  if (orderConfirmed) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center space-y-6 animate-in zoom-in duration-500">
+          <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8">
+            <Check className="w-10 h-10" />
+          </div>
+          <h1 className="text-4xl font-black italic uppercase tracking-tighter">Order Success</h1>
+          <p className="text-gray-400">Thank you for your purchase. We will notify you when your order is shipped.</p>
+          <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-left">
+             <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Order ID</p>
+             <p className="font-mono text-sm">#{orderId}</p>
+          </div>
+          <div className="pt-4">
+            <Link 
+              href="/" 
+              className="inline-block w-full bg-white text-black font-extrabold py-4 rounded-full uppercase tracking-widest hover:bg-gray-200 transition-all"
+            >
+              Back to Store
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (cartCount === 0 && !isSubmitting) { // Changed isProcessing to isSubmitting
     return (
       <div className="mx-auto max-w-7xl px-4 md:px-6 py-20 text-center">
         <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
@@ -55,7 +104,7 @@ export default function CheckoutPage() {
           
           <h1 className="text-3xl font-bold mb-10">Checkout</h1>
           
-          <form onSubmit={handleCheckout} className="space-y-10">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Contact Info */}
             <section>
               <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">

@@ -9,13 +9,14 @@ datasource db {
 }
 
 model Product {
-  id          String   @id
+  id          String      @id
   name        String
   price       Int
   description String
   images      String[]
   category    String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime    @default(now())
+  orderItems  OrderItem[]
 }
 
 model User {
@@ -26,3 +27,25 @@ model User {
   role      String   @default("admin")
   createdAt DateTime @default(now())
 }
+
+model Order {
+  id        String      @id @default(cuid())
+  items     OrderItem[]
+  total     Int
+  status    String      @default("pending")
+  customer  Json        // { name, email, phone, address, city, province, zip }
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  name      String   // Snapshot of product name
+  price     Int      // Snapshot of price at time of purchase
+  quantity  Int
+}
+

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -10,19 +11,29 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => { // Removed async
     e.preventDefault();
     setIsLoading(true);
-    setError('');
 
-    // Mock login for now - will implement proper auth next
+    // Simple auth check (expand this for production)
     if (email === 'admin@fitcheck.com' && password === 'admin123') {
-      localStorage.setItem('isAdmin', 'true');
-      router.push('/admin');
+      // Set cookie for middleware access
+      document.cookie = "admin_session=authenticated; path=/; max-age=86400; SameSite=Strict";
+      
+      toast.success('Login Successful', {
+        description: 'Welcome back, Admin.'
+      });
+      
+      setTimeout(() => {
+        router.push('/admin');
+      }, 1000);
     } else {
+      setIsLoading(false);
       setError('Invalid email or password');
+      toast.error('Invalid Credentials', {
+        description: 'Please check your email and password.'
+      });
     }
-    setIsLoading(false);
   };
 
   return (

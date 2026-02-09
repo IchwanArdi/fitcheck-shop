@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +45,8 @@ import { getCategories } from "@/lib/data";
 import { Toaster } from 'sonner';
 import CookieConsent from "@/components/CookieConsent";
 import ScrollToTop from "@/components/ScrollToTop";
+import DemoBanner from "@/components/DemoBanner";
+import { Suspense } from "react";
 
 export default async function RootLayout({ children }) {
   const categories = await getCategories();
@@ -55,12 +57,13 @@ export default async function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white min-h-screen flex flex-col`}
       >
         <CartProvider>
+          <DemoBanner />
           <Navbar categories={categories} />
           <CartSidebar />
           <Toaster richColors closeButton theme="dark" position="top-center" />
           <CookieConsent />
           <ScrollToTop />
-          <main className="flex-1">
+          <main className="min-h-screen">
             {children}
           </main>
           <Footer />
