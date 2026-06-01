@@ -4,11 +4,29 @@ import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Truck, CreditCard, ShieldCheck, Check } from 'lucide-react';
-import { createOrder as createOrderAction } from '@/lib/actions'; // Renamed to avoid conflict
-import { useState } from 'react';
+import { createOrder as createOrderAction } from '@/lib/actions';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export default function CheckoutPage() {
+
+  useEffect(() => {
+    // 1. Membuat element <script>
+    const script = document.createElement('script');
+    script.src = 'https://app.sandbox.midtrans.com/snap/snap.js'
+
+    // 2. Menambahkan Atribut Key & Inject ke Body
+    script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY);
+    document.body.appendChild(script);
+
+    // Cleanup
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+
   const { cartItems, cartCount, clearCart } = useCart(); // Removed createOrder from here
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,24 +46,39 @@ export default function CheckoutPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // Simulate payment process and save to DB
-    const customerData = { 
-      name: `${firstName} ${lastName}`, 
-      email, 
-      address, 
-      city, 
-      postalCode 
+    const customerData = {
+      name: `${firstName} ${lastName}`,
+      email,
+      address,
+      city,
+      postalCode
     };
     const result = await createOrderAction(customerData, cartItems, total);
 
-    if (result.success) {
-      setOrderId(result.orderId);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setOrderConfirmed(true);
-        clearCart();
-      }, 1500);
+    if (result.success && result.snapToken) {
+      window.snap.pay(result.snapToken, {
+        onSuccess: function (midtransResult) {
+          toast.success("Pembayaran Sukses!");
+          setOrderId(result.orderId);
+          setIsSubmitting(false);
+          setOrderConfirmed(true);
+          clearCart();
+        },
+        onPending: function (midtransResult) {
+          toast.info("Menunggu pembayaran...");
+          setIsSubmitting(false);
+        },
+        onError: function (midtransResult) {
+          toast.error("Pembayaran Gagal!");
+          setIsSubmitting(false);
+        },
+        onClose: function () {
+          toast.info("Anda menutup pop-up sebelum membayar.");
+          setIsSubmitting(false);
+        }
+      });
     } else {
       setIsSubmitting(false);
       toast.error("Order failed. Please try again.");
@@ -62,12 +95,12 @@ export default function CheckoutPage() {
           <h1 className="text-4xl font-black italic uppercase tracking-tighter">Order Success</h1>
           <p className="text-gray-400">Thank you for your purchase. We will notify you when your order is shipped.</p>
           <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-left">
-             <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Order ID</p>
-             <p className="font-mono text-sm">#{orderId}</p>
+            <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Order ID</p>
+            <p className="font-mono text-sm">#{orderId}</p>
           </div>
           <div className="pt-4">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="inline-block w-full bg-white text-black font-extrabold py-4 rounded-full uppercase tracking-widest hover:bg-gray-200 transition-all"
             >
               Back to Store
@@ -93,16 +126,16 @@ export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-6 py-12 md:py-20">
       <div className="flex flex-col lg:flex-row gap-12">
-        
+
         {/* Left: Checkout Form */}
         <div className="flex-1">
           <Link href="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-8 transition-colors w-fit">
             <ArrowLeft className="w-4 h-4" />
             Back to Cart
           </Link>
-          
+
           <h1 className="text-3xl font-bold mb-10">Checkout</h1>
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Contact Info */}
             <section>
@@ -111,9 +144,11 @@ export default function CheckoutPage() {
                 Contact Information
               </h2>
               <div className="grid grid-cols-1 gap-4">
-                <input 
+                <input
                   required
-                  type="email" 
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email Address"
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                 />
@@ -127,32 +162,42 @@ export default function CheckoutPage() {
                 Shipping Details
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input 
+                <input
                   required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
                   placeholder="First Name"
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                 />
-                <input 
+                <input
                   required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
                   placeholder="Last Name"
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                 />
                 <div className="md:col-span-2">
-                  <input 
+                  <input
                     required
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
                     placeholder="Address"
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                   />
                 </div>
-                <input 
+                <input
                   required
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
                   placeholder="City"
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                 />
-                <input 
-                   required
-                   placeholder="Postal Code"
-                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                <input
+                  required
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                  placeholder="Postal Code"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
             </section>
@@ -164,26 +209,18 @@ export default function CheckoutPage() {
                 Payment Method
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <label className="relative flex items-center p-4 border border-blue-500 bg-blue-500/5 rounded-xl cursor-pointer">
-                    <input type="radio" name="payment" defaultChecked className="hidden" />
-                    <CreditCard className="w-5 h-5 mr-3 text-blue-400" />
-                    <div className="flex-1">
-                       <p className="text-sm font-bold">Bank Transfer</p>
-                       <p className="text-xs text-gray-500">BCA, Mandiri, BNI</p>
-                    </div>
-                 </label>
-                 <label className="relative flex items-center p-4 border border-white/10 bg-white/5 rounded-xl cursor-pointer hover:border-white/20">
-                    <input type="radio" name="payment" className="hidden" />
-                    <ShieldCheck className="w-5 h-5 mr-3 text-gray-400" />
-                    <div className="flex-1">
-                       <p className="text-sm font-bold">E-Wallet</p>
-                       <p className="text-xs text-gray-500">GoPay, OVO, Dana</p>
-                    </div>
-                 </label>
+                <label className="relative flex items-center p-4 border border-white/10 bg-white/5 rounded-xl cursor-pointer hover:border-white/20">
+                  <input type="radio" name="payment" className="hidden" />
+                  <ShieldCheck className="w-5 h-5 mr-3 text-gray-400" />
+                  <div className="flex-1">
+                    <p className="text-sm font-bold">E-Wallet</p>
+                    <p className="text-xs text-gray-500">GoPay, OVO, Dana</p>
+                  </div>
+                </label>
               </div>
             </section>
 
-            <button 
+            <button
               disabled={isSubmitting}
               className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
@@ -196,24 +233,24 @@ export default function CheckoutPage() {
         <div className="lg:w-[400px]">
           <div className="bg-[#111] border border-white/5 rounded-2xl p-6 sticky top-32">
             <h2 className="text-xl font-bold mb-6">Order Summary</h2>
-            
+
             <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2 no-scrollbar">
               {cartItems.map((item) => (
                 <div key={`${item.id}-${item.size}`} className="flex gap-4">
-                   <div className="w-16 h-16 bg-white/5 border border-white/5 rounded-lg overflow-hidden flex-shrink-0 relative">
-                      <Image 
-                        src={item.images?.[0] || item.image || 'https://placehold.co/200x200/111/FFF?text=No+Image'} 
-                        alt={item.name} 
-                        fill
-                        className="object-cover" 
-                        sizes="64px"
-                      />
-                   </div>
-                   <div className="flex-1">
-                      <h3 className="text-sm font-bold truncate">{item.name}</h3>
-                      <p className="text-xs text-gray-500">Qty: {item.quantity} • Size: {item.size}</p>
-                   </div>
-                   <p className="text-sm font-medium">Rp {new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}</p>
+                  <div className="w-16 h-16 bg-white/5 border border-white/5 rounded-lg overflow-hidden flex-shrink-0 relative">
+                    <Image
+                      src={item.images?.[0] || item.image || 'https://placehold.co/200x200/111/FFF?text=No+Image'}
+                      alt={item.name}
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold truncate">{item.name}</h3>
+                    <p className="text-xs text-gray-500">Qty: {item.quantity} • Size: {item.size}</p>
+                  </div>
+                  <p className="text-sm font-medium">Rp {new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}</p>
                 </div>
               ))}
             </div>
@@ -234,10 +271,10 @@ export default function CheckoutPage() {
             </div>
 
             <div className="mt-8 pt-6 border-t border-white/5">
-                <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <Truck className="w-4 h-4" />
-                    <span>Free shipping on orders over Rp 500.000</span>
-                </div>
+              <div className="flex items-center gap-3 text-xs text-gray-500">
+                <Truck className="w-4 h-4" />
+                <span>Free shipping on orders over Rp 500.000</span>
+              </div>
             </div>
           </div>
         </div>
