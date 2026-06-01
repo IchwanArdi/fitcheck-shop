@@ -1,5 +1,4 @@
 import prisma from './prisma';
-import redis from './redis';
 
 const CACHE_TTL = {
   PRODUCT: 86400, // 24 hours
@@ -8,21 +7,7 @@ const CACHE_TTL = {
 };
 
 const getCachedData = async (key, fetchFn, ttl) => {
-  if (!redis) return await fetchFn();
-
-  try {
-    const cached = await redis.get(key);
-    if (cached) return JSON.parse(cached);
-
-    const freshData = await fetchFn();
-    if (freshData) {
-      await redis.set(key, JSON.stringify(freshData), 'EX', ttl);
-    }
-    return freshData;
-  } catch (error) {
-    console.error(`Redis error for key ${key}:`, error);
-    return await fetchFn();
-  }
+  return await fetchFn();
 };
 
 export const getProductById = async (id) => {

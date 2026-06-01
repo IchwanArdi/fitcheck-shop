@@ -2,25 +2,9 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import redis from './redis';
 
 const purgeCache = async (productId = null) => {
-  if (!redis) return;
-  try {
-    // Instead of keys('*'), we purge the main lists specifically
-    // to avoid performance hits on larger data sets
-    const listKeys = ['products:latest', 'products:price-asc', 'products:price-desc', 'categories'];
-    await redis.del(...listKeys);
-    
-    // Also purge common category views (optional, or let them TTL)
-    // For simplicity with 30MB limit, purging specific lists is safer
-    
-    if (productId) {
-      await redis.del(`product:${productId}`);
-    }
-  } catch (err) {
-    console.error('Redis purge error:', err);
-  }
+  // No-op: Redis caching has been completely removed
 };
 
 export async function createProduct(formData) {
