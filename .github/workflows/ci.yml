@@ -1,0 +1,49 @@
+name: FITCHECK Shop CI Pipeline
+
+# Trigger pipeline setiap kali ada push ke branch main ATAU pull request ke branch main
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    name: Verify Code, Generate Prisma & Build Next.js
+    runs-on: ubuntu-latest
+
+    # Setup Environment Variables palsu untuk proses build Next.js (Supaya build tidak error)
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
+      DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
+      MIDTRANS_SERVER_KEY: "dummy-key"
+      MIDTRANS_CLIENT_KEY: "dummy-key"
+      NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: "dummy-key"
+
+    steps:
+      # Step 1: Checkout/Ambil kode repository Anda ke runner GitHub Actions
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Install Node.js di server runner
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm' # Mengaktifkan caching untuk npm dependencies agar build lebih cepat berikutnya
+
+      # Step 3: Install library dependencies proyek Anda secara bersih (Clean install)
+      - name: Install Dependencies
+        run: npm ci
+
+      # Step 4: Generate client Prisma ORM (Krusial sebelum Next.js build agar model Prisma terdeteksi)
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      # Step 5: Jalankan Linter untuk mengecek kesalahan pengetikan / kode yang tidak rapi
+      - name: Run ESLint (Linter Check)
+        run: npm run lint
+
+      # Step 6: Lakukan kompilasi/build proyek Next.js untuk memastikan tidak ada error kompilasi
+      - name: Test Build Production
+        run: npm run build
