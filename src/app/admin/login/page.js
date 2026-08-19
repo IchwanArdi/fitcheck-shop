@@ -15,17 +15,26 @@ export default function AdminLoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(''); // Reset error setiap kali submit
 
-    // Coba login via action (Database)
-    const result = await loginAdminAction(email, password);
+    try {
+      // Coba login via action (Database)
+      const result = await loginAdminAction(email, password);
 
-    // Cek Hasil Login
-    if (result.success) {
-      toast.success('Login Berhasil', { description: 'Selamat datang kembali, Admin.' });
-      router.push('/admin/dashboard');
-    } else {
-      setError(result.error);
-      toast.error('Login Gagal', { description: error });
+      // Cek Hasil Login
+      if (result.success) {
+        toast.success('Login Berhasil', { description: 'Selamat datang kembali, Admin.' });
+        router.push('/admin/dashboard');
+      } else {
+        setError(result.error);
+        // Perbaikan: Gunakan result.error langsung di sini, jangan gunakan state 'error'
+        toast.error('Login Gagal', { description: result.error });
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi.');
+      toast.error('Login Gagal', { description: 'Terjadi kesalahan sistem.' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -80,3 +89,6 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+
+// Tambahkan ini agar Next.js tidak memaksa melakukan koneksi database saat npm run build di GitHub Actions
+export const dynamic = 'force-dynamic';

@@ -41,13 +41,17 @@ export const getProductsByCategory = async (category, sort = 'latest') => {
   });
 };
 
-// Func All Kategori
 export const getCategories = async () => {
-  const products = await prisma.product.findMany({
-    select: { category: true },
-    distinct: ['category'],
-  });
-  return products.map(p => p.category);
+  try {
+    const products = await prisma.product.findMany({
+      select: { category: true },
+      distinct: ['category'],
+    });
+    return products.map(p => p.category);
+  } catch (error) {
+    console.error("Failed to fetch categories from database:", error.message);
+    return ['Shirts', 'Objects']; // Fallback default categories
+  }
 };
 
 // Func Pencarian Produk
