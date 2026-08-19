@@ -48,7 +48,7 @@ export default function CookieConsent() {
                 </div>
 
                 <p className="text-sm text-gray-400 leading-relaxed mb-6">
-                    We use cookies to enhance your experience, analyze site traffic, and serve personalized content. By clicking "Accept", you agree to our use of cookies.
+                    We use cookies to enhance your experience, analyze site traffic, and serve personalized content. By clicking &quot;Accept&quot;, you agree to our use of cookies.
                     <Link href="/privacy" className="text-blue-400 hover:underline ml-1">Learn more</Link>
                 </p>
 

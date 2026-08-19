@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { loginAdminAction } from '@/lib/actions';
 import { toast } from 'sonner';
 
 export default function AdminLoginPage() {
@@ -11,28 +12,29 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = (e) => { // Removed async
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(''); // Reset error setiap kali submit
 
-    // Simple auth check (expand this for production)
-    if (email === 'admin@fitcheck.com' && password === 'admin123') {
-      // Set cookie for middleware access
-      document.cookie = "admin_session=authenticated; path=/; max-age=86400; SameSite=Strict";
-      
-      toast.success('Login Successful', {
-        description: 'Welcome back, Admin.'
-      });
-      
-      setTimeout(() => {
-        router.push('/admin');
-      }, 1000);
-    } else {
+    try {
+      // Coba login via action (Database)
+      const result = await loginAdminAction(email, password);
+
+      // Cek Hasil Login
+      if (result.success) {
+        toast.success('Login Berhasil', { description: 'Selamat datang kembali, Admin.' });
+        router.push('/admin/dashboard');
+      } else {
+        setError(result.error);
+        // Perbaikan: Gunakan result.error langsung di sini, jangan gunakan state 'error'
+        toast.error('Login Gagal', { description: result.error });
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi.');
+      toast.error('Login Gagal', { description: 'Terjadi kesalahan sistem.' });
+    } finally {
       setIsLoading(false);
-      setError('Invalid email or password');
-      toast.error('Invalid Credentials', {
-        description: 'Please check your email and password.'
-      });
     }
   };
 
@@ -47,8 +49,8 @@ export default function AdminLoginPage() {
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label className="block text-xs uppercase tracking-widest text-gray-500 font-bold mb-2">Email</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors"
@@ -59,8 +61,8 @@ export default function AdminLoginPage() {
 
           <div>
             <label className="block text-xs uppercase tracking-widest text-gray-500 font-bold mb-2">Password</label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors"
@@ -75,7 +77,7 @@ export default function AdminLoginPage() {
             </div>
           )}
 
-          <button 
+          <button
             type="submit"
             disabled={isLoading}
             className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
@@ -87,3 +89,6 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+
+// Tambahkan ini agar Next.js tidak memaksa melakukan koneksi database saat npm run build di GitHub Actions
+export const dynamic = 'force-dynamic';

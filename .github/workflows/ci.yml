@@ -16,6 +16,7 @@ jobs:
     env:
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
       DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
+      PRISMA_DISABLE_WITHOUT_DATABASE_WARNING: "1"
       MIDTRANS_SERVER_KEY: "dummy-key"
       MIDTRANS_CLIENT_KEY: "dummy-key"
       NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: "dummy-key"

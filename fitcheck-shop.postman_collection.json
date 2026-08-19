@@ -1,0 +1,656 @@
+{
+	"info": {
+		"_postman_id": "a821e1bf-58f3-4906-bb7d-855e6b321265",
+		"name": "FITCHECK Shop - E-Commerce API Collection",
+		"description": "# FITCHECK Shop API Collection\n\nKoleksi API profesional untuk **FITCHECK E-Commerce System** (Next.js App Router + Prisma + PostgreSQL + Midtrans Payment Gateway).\n\n## 🚀 Quick Start Instructions\n1. Import file `api.json` atau `fitcheck-shop.postman_collection.json` ke Postman.\n2. Pastikan server lokal Next.js running di `http://localhost:3000` (`npm run dev`).\n3. Variabel `baseUrl` bawaan adalah `http://localhost:3000`.\n4. Jalankan request secara berurutan atau gunakan Postman Collection Runner.\n\n## 📁 Daftar Endpoint & Modul\n- **Authentication**: Admin login (`POST /api/auth/login`)\n- **Products**: Management katalog produk (CRUD `GET`, `POST`, `PUT`, `DELETE`)\n- **Categories**: Mengambil daftar kategori unik produk (`GET /api/categories`)\n- **Search**: Auto-complete suggestion search bar (`GET /api/search/suggestions`)\n- **Orders**: Management pesanan & checkout Snap Midtrans (`GET`, `POST`, `PATCH`)\n- **Webhooks**: Midtrans payment status notification handler (`POST /api/webhooks/midtrans`)\n\n---",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01. Authentication",
+			"item": [
+				{
+					"name": "Admin Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Login successful and returns user info\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"    pm.expect(jsonData.user.role).to.eql(\"admin\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@fitcheck.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Melakukan otentikasi login admin dan menetapkan session cookie."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "02. Products",
+			"item": [
+				{
+					"name": "Get All Products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Returns products list\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products"
+							]
+						},
+						"description": "Mengambil semua daftar produk dari toko."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Products (Filtered by Category & Sort)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Returns filtered products array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products?category=Shirts&sort=price-asc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "Shirts",
+									"description": "Kategori produk (misal: Shirts, Objects)"
+								},
+								{
+									"key": "sort",
+									"value": "price-asc",
+									"description": "Sorting: latest | price-asc | price-desc"
+								}
+							]
+						},
+						"description": "Mengambil daftar produk berdasarkan filter kategori dan opsi pengurutan harga."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Product by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Product ID matches\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"    pm.expect(jsonData.data.id).to.eql(pm.collectionVariables.get(\"productId\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productId}}"
+							]
+						},
+						"description": "Mengambil rincian data produk spesifik berdasarkan ID produk."
+					},
+					"response": []
+				},
+				{
+					"name": "Create New Product (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"pm.test(\"Product created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"    if (jsonData.data && jsonData.data.id) {",
+									"        pm.collectionVariables.set(\"productId\", jsonData.data.id);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"fitcheck-jacket-001\",\n  \"name\": \"Fitcheck Oversized Utility Jacket\",\n  \"price\": 450000,\n  \"category\": \"Outerwear\",\n  \"description\": \"Premium water-resistant oversized jacket crafted for modern urban aesthetics.\",\n  \"images\": [\n    \"https://placehold.co/600x600/111/FFF?text=Fitcheck+Jacket\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products"
+							]
+						},
+						"description": "Menambahkan produk baru ke database (Fitur Admin)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Product update confirmed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Fitcheck Oversized Utility Jacket (Limited Edition)\",\n  \"price\": 499000,\n  \"category\": \"Outerwear\",\n  \"description\": \"Updated description for limited edition oversized utility jacket.\",\n  \"images\": [\n    \"https://placehold.co/600x600/111/FFF?text=Fitcheck+Jacket+Limited\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productId}}"
+							]
+						},
+						"description": "Memperbarui informasi produk yang sudah ada berdasarkan ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Product deletion response verified\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/fitcheck-jacket-001",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"fitcheck-jacket-001"
+							]
+						},
+						"description": "Menghapus produk dari database berdasarkan ID produk."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "03. Categories",
+			"item": [
+				{
+					"name": "Get All Categories",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Returns array of categories\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories"
+							]
+						},
+						"description": "Mengambil seluruh kategori unik yang terdaftar pada katalog produk."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "04. Search & Suggestions",
+			"item": [
+				{
+					"name": "Get Search Suggestions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Returns suggestion list\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/search/suggestions?q=fitcheck",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"search",
+								"suggestions"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "fitcheck",
+									"description": "Kata kunci pencarian (minimal 2 karakter)"
+								}
+							]
+						},
+						"description": "Mendapatkan saran cepat nama/kategori produk untuk auto-complete pencarian."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "05. Orders & Checkout",
+			"item": [
+				{
+					"name": "Get All Orders (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Returns list of orders\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/orders",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"orders"
+							]
+						},
+						"description": "Mengambil seluruh daftar order beserta detail item yang dibeli (Admin Panel)."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Checkout Order (Midtrans Snap Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"pm.test(\"Returns snapToken & orderId\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"    pm.expect(jsonData).to.have.property('orderId');",
+									"    if (jsonData.orderId) {",
+									"        pm.collectionVariables.set(\"orderId\", jsonData.orderId);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": {\n    \"name\": \"Ichwan Ardi\",\n    \"email\": \"ichwan@example.com\",\n    \"phone\": \"08123456789\",\n    \"address\": \"Jl. Sudirman No. 45\",\n    \"city\": \"Jakarta South\",\n    \"postalCode\": \"12190\"\n  },\n  \"items\": [\n    {\n      \"id\": \"fitcheck-shirt-001\",\n      \"name\": \"Fitcheck Circles T-Shirt\",\n      \"price\": 200000,\n      \"quantity\": 1,\n      \"size\": \"L\"\n    }\n  ],\n  \"total\": 225000\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/orders",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"orders"
+							]
+						},
+						"description": "Membuat order baru dan menghasilkan Midtrans Snap Token untuk transaksi payment gateway."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order Details by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Order details returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/orders/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"{{orderId}}"
+							]
+						},
+						"description": "Mengambil rincian data order spesifik berdasarkan orderId."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Status (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Order status updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"    pm.expect(jsonData.data.status).to.eql(\"paid\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"paid\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/orders/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"{{orderId}}"
+							]
+						},
+						"description": "Memperbarui status order (Pilihan status: pending, paid, shipped, completed, cancelled)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "06. Webhooks & Payments",
+			"item": [
+				{
+					"name": "Midtrans Payment Notification Webhook",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Webhook processed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order_id\": \"{{orderId}}\",\n  \"transaction_status\": \"settlement\",\n  \"fraud_status\": \"accept\",\n  \"gross_amount\": \"225000.00\",\n  \"payment_type\": \"gopay\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/webhooks/midtrans",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"webhooks",
+								"midtrans"
+							]
+						},
+						"description": "Endpoint simulator HTTP POST Webhook dari Midtrans saat status transaksi pelanggan berubah."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "productId",
+			"value": "fitcheck-shirt-001",
+			"type": "string"
+		},
+		{
+			"key": "orderId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

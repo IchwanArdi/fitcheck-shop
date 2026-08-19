@@ -162,7 +162,7 @@ export default function Navbar({ categories = ['Shirts', 'Objects'] }) {
                   onClick={handleSearch}
                   className="w-full p-3 bg-white/5 border-t border-white/5 text-[10px] uppercase tracking-widest font-bold text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-2"
                 >
-                  See all results for "{searchQuery}"
+                  See all results for &quot;{searchQuery}&quot;
                 </button>
               </div>
             )}

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export function middleware(request) {
+export function proxy(request) {
   const path = request.nextUrl.pathname;
 
   // Define admin routes

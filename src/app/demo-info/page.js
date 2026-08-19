@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, Info, ShoppingBag, ShieldCheck, Database } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, ShieldCheck, Database } from 'lucide-react';
 
 export const metadata = {
   title: 'Demo Information',
@@ -16,9 +16,6 @@ export default function DemoInfoPage() {
 
       <div className="space-y-12">
         <header>
-          <div className="w-16 h-16 bg-blue-500/20 text-blue-500 rounded-3xl flex items-center justify-center mb-6">
-            <Info className="w-8 h-8" />
-          </div>
           <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter mb-4">Demo Information</h1>
           <p className="text-xl text-gray-400 leading-relaxed font-medium">
             Fitcheck is a high-performance e-commerce demonstration built to showcase modern web technologies and premium design aesthetics.
@@ -31,8 +28,9 @@ export default function DemoInfoPage() {
               <ShoppingBag className="w-5 h-5 text-blue-400" />
               <h2 className="text-xl font-bold uppercase tracking-tight">Shopping & Checkout</h2>
             </div>
+            {/* Karakter " pada "checkout" sudah diganti dengan &quot; */}
             <p className="text-gray-400 text-sm leading-relaxed">
-              All products listed are for demonstration purposes. While you can complete the "checkout" process, no actual payments are processed, and no physical items will be shipped.
+              All products listed are for demonstration purposes. While you can complete the &quot;checkout&quot; process, no actual payments are processed, and no physical items will be shipped.
             </p>
           </div>
 
@@ -51,16 +49,17 @@ export default function DemoInfoPage() {
               <Database className="w-5 h-5 text-green-400" />
               <h2 className="text-xl font-bold uppercase tracking-tight">Technology Stack</h2>
             </div>
+            {/* Mengganti sintaks markdown ** dengan tag <strong> agar aman di JSX */}
             <p className="text-gray-400 text-sm leading-relaxed">
-              Built with **Next.js 15**, **Prisma ORM**, **PostgreSQL**, and **Redis Caching**. The store features real-time search, dynamic inventory management, and a secure admin dashboard.
+              Built with <strong className="text-white font-bold">Next.js 15</strong>, <strong className="text-white font-bold">Prisma ORM</strong>, <strong className="text-white font-bold">PostgreSQL</strong>, and <strong className="text-white font-bold">Redis Caching</strong>. The store features real-time search, dynamic inventory management, and a secure admin dashboard.
             </p>
           </div>
         </div>
 
         <div className="pt-12 border-t border-white/5">
-           <p className="text-sm text-gray-500 italic">
-             &copy; {new Date().getFullYear()} Fitcheck Elite Demo. All Rights Reserved.
-           </p>
+          <p className="text-sm text-gray-500 italic">
+            &copy; {new Date().getFullYear()} Fitcheck Elite Demo. All Rights Reserved.
+          </p>
         </div>
       </div>
     </div>

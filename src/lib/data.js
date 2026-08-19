@@ -1,9 +1,21 @@
 import prisma from './prisma';
+import { cookies } from 'next/headers';
 
+
+// Func Cek Cookie Admin
+export const getAdminSession = async () => {
+  const cookieStore = await cookies();
+  const session = cookieStore.get('admin_session');
+
+  return session && session.value === 'authenticated';
+}
+
+// Func Detail Produk berdasarkan ID
 export const getProductById = async (id) => {
   return await prisma.product.findUnique({ where: { id } });
 };
 
+// Func Filter Produk berdasarkan Kategori
 const getSortOrder = (sort) => {
   switch (sort) {
     case 'price-asc': return { price: 'asc' };
@@ -13,10 +25,12 @@ const getSortOrder = (sort) => {
   }
 };
 
+// Func All Data Produk
 export const getProducts = async (sort = 'latest') => {
   return await prisma.product.findMany({ orderBy: getSortOrder(sort) });
 };
 
+// Func Filter Produk berdasarkan Kategori
 export const getProductsByCategory = async (category, sort = 'latest') => {
   if (category === 'All') {
     return await getProducts(sort);
@@ -28,13 +42,19 @@ export const getProductsByCategory = async (category, sort = 'latest') => {
 };
 
 export const getCategories = async () => {
-  const products = await prisma.product.findMany({
-    select: { category: true },
-    distinct: ['category'],
-  });
-  return products.map(p => p.category);
+  try {
+    const products = await prisma.product.findMany({
+      select: { category: true },
+      distinct: ['category'],
+    });
+    return products.map(p => p.category);
+  } catch (error) {
+    console.error("Failed to fetch categories from database:", error.message);
+    return ['Shirts', 'Objects']; // Fallback default categories
+  }
 };
 
+// Func Pencarian Produk
 export const searchProducts = async (query, sort = 'latest') => {
   if (!query) return [];
   return await prisma.product.findMany({
@@ -48,6 +68,7 @@ export const searchProducts = async (query, sort = 'latest') => {
   });
 };
 
+// Func Cari Produk Serupa
 export const getSimilarProducts = async (id) => {
   return await prisma.product.findMany({
     where: { NOT: { id } },
@@ -56,6 +77,7 @@ export const getSimilarProducts = async (id) => {
   });
 };
 
+// Func Auto Suggestion Pencarian
 export async function getSearchSuggestions(query) {
   if (!query || query.length < 2) return [];
 

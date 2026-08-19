@@ -2,11 +2,12 @@ export default function TermsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 md:px-6 py-12 md:py-20">
       <h1 className="text-3xl font-bold mb-8">Terms of Service</h1>
-      
+
       <div className="prose prose-invert max-w-none space-y-8 text-gray-400">
         <section>
           <h2 className="text-xl font-bold text-white mb-4">1. Acceptance of Terms</h2>
-          <p>By accesssing and using "Fitcheck" (the "Site"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Site.</p>
+          {/* Karakter " sudah diganti dengan &quot; */}
+          <p>By accesssing and using &quot;Fitcheck&quot; (the &quot;Site&quot;), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Site.</p>
         </section>
 
         <section>
