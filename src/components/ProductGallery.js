@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 export default function ProductGallery({ images = [], name }) {
+  const [prevImages, setPrevImages] = useState(images);
   const [activeImage, setActiveImage] = useState(images[0] || 'https://placehold.co/600x600/111/FFF?text=No+Image');
 
-  // Sync active image if images prop changes (important for client-side navigation)
-  useEffect(() => {
-    if (images.length > 0) {
-      setActiveImage(images[0]);
-    }
-  }, [images]);
+  if (images !== prevImages) {
+    setPrevImages(images);
+    setActiveImage(images[0] || 'https://placehold.co/600x600/111/FFF?text=No+Image');
+  }
 
   if (!images || images.length === 0) {
     return (

@@ -9,22 +9,29 @@ export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+  const [isLoaded, setIsLoaded] = useState(false);
+
   // Load cart from local storage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('fitcheck_cart');
     if (savedCart) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCartItems(JSON.parse(savedCart));
       } catch (e) {
         console.error("Failed to parse cart", e);
       }
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsLoaded(true);
   }, []);
 
   // Save cart to local storage whenever it changes
   useEffect(() => {
-    localStorage.setItem('fitcheck_cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (isLoaded) {
+      localStorage.setItem('fitcheck_cart', JSON.stringify(cartItems));
+    }
+  }, [cartItems, isLoaded]);
 
   const addToCart = (product, size = 'M') => {
     // Basic safety check
