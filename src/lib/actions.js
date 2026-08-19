@@ -2,7 +2,8 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import midtransClient from 'midtrans-client';
+import midtransClient from 'midtrans-client'
+import { cookies } from 'next/headers';
 
 // Setup Midtrans Client
 const snap = new midtransClient.Snap({
@@ -11,6 +12,54 @@ const snap = new midtransClient.Snap({
   clientKey: process.env.MIDTRANS_CLIENT_KEY
 });
 
+// Func Login
+export async function loginAdminAction(email, password) {
+  try {
+    // 1. Cari user berdasarkan email di database
+    const user = await prisma.user.findUnique({
+      where: { email: email }
+    });
+
+    // 2. Jika user tidak ditemukan
+    if (!user) {
+      return { success: false, error: 'Email atau password salah!' };
+    }
+
+    // 3. Cek password (masih plain text, pastikan di DB nilainya cocok)
+    if (user.password !== password) {
+      return { success: false, error: 'Email atau password salah!' };
+    }
+
+    // 4. Cek apakah rolenya adalah admin
+    if (user.role !== 'admin') {
+      return { success: false, error: 'Anda bukan admin!' };
+    }
+
+    // 5. Jika semua benar, buat cookie sesi
+    const cookieStore = await cookies();
+    cookieStore.set('admin_session', 'authenticated', {
+      path: '/',
+      maxAge: 86400, // 24 Jam
+      sameSite: 'strict',
+      httpOnly: true, // Aman dari hacker JS
+      secure: process.env.NODE_ENV === 'production',
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: 'Server sedang bermasalah.' };
+  }
+}
+
+// Hapus cookie saat logout
+export async function logoutAdminAction() {
+  const cookieStore = await cookies();
+  cookieStore.delete('admin_session');
+  return { success: true };
+}
+
+// Func Tambah Produk
 export async function createProduct(formData) {
   const id = formData.get('id');
   const name = formData.get('name');
@@ -27,6 +76,7 @@ export async function createProduct(formData) {
   revalidatePath('/');
 }
 
+// Func Hapus Produk
 export async function deleteProduct(id) {
   await prisma.product.delete({
     where: { id }
@@ -35,6 +85,7 @@ export async function deleteProduct(id) {
   revalidatePath('/');
 }
 
+// Func Update Produk
 export async function updateProduct(id, formData) {
   const name = formData.get('name');
   const price = parseInt(formData.get('price'));
@@ -51,6 +102,7 @@ export async function updateProduct(id, formData) {
   revalidatePath(`/product/${id}`);
 }
 
+// Func Pembayaran Order
 export async function createOrder(customerData, items, total) {
   try {
     // 1. Simpan ke Database (Order & Order Items)
