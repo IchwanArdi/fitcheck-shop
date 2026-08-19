@@ -33,14 +33,14 @@ export default async function SearchPage({ searchParams }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {products.map((product, i) => (
               <AnimatedGridItem key={product.id} delay={i * 0.05}>
-                <Link 
-                  href={`/product/${product.id}`} 
+                <Link
+                  href={`/product/${product.id}`}
                   className="group block bg-[#111] border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 transform hover:-translate-y-1"
                 >
                   <div className="aspect-square flex items-center justify-center p-8 bg-white/5 relative">
-                    <Image 
-                      src={product.images?.[0] || 'https://placehold.co/400x400/111/FFF?text=No+Image'} 
-                      alt={product.name} 
+                    <Image
+                      src={product.images?.[0] || 'https://placehold.co/400x400/111/FFF?text=No+Image'}
+                      alt={product.name}
                       fill
                       className="object-contain p-8 group-hover:scale-105 transition-transform duration-500"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -49,8 +49,8 @@ export default async function SearchPage({ searchParams }) {
                   <div className="p-4 border-t border-white/5">
                     <h3 className="font-bold text-gray-200 group-hover:text-white transition-colors truncate">{product.name}</h3>
                     <div className="flex justify-between items-center mt-2">
-                       <span className="text-sm text-blue-400 font-medium">Rp {new Intl.NumberFormat('id-ID').format(product.price)}</span>
-                       <span className="text-[10px] uppercase tracking-widest text-gray-600">{product.category}</span>
+                      <span className="text-sm text-blue-400 font-medium">Rp {new Intl.NumberFormat('id-ID').format(product.price)}</span>
+                      <span className="text-[10px] uppercase tracking-widest text-gray-600">{product.category}</span>
                     </div>
                   </div>
                 </Link>
@@ -59,14 +59,15 @@ export default async function SearchPage({ searchParams }) {
           </div>
         ) : (
           <div className="text-center py-32 bg-[#0a0a0a] rounded-3xl border border-dashed border-white/10 flex flex-col items-center">
-              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6">
-                  <Search className="w-8 h-8 text-gray-600" />
-              </div>
-              <h2 className="text-xl font-bold mb-2">No products found</h2>
-              <p className="text-gray-500 max-w-xs mx-auto">We couldn't find anything matching your search. Try different keywords or browse our categories.</p>
-              <Link href="/" className="mt-8 px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors">
-                  Back to Home
-              </Link>
+            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6">
+              <Search className="w-8 h-8 text-gray-600" />
+            </div>
+            <h2 className="text-xl font-bold mb-2">No products found</h2>
+            {/* Karakter ' pada couldn't sudah diganti dengan &apos; */}
+            <p className="text-gray-500 max-w-xs mx-auto">We couldn&apos;t find anything matching your search. Try different keywords or browse our categories.</p>
+            <Link href="/" className="mt-8 px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors">
+              Back to Home
+            </Link>
           </div>
         )}
       </div>
