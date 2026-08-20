@@ -27,7 +27,12 @@ const getSortOrder = (sort) => {
 
 // Func All Data Produk
 export const getProducts = async (sort = 'latest') => {
-  return await prisma.product.findMany({ orderBy: getSortOrder(sort) });
+  try {
+    return await prisma.product.findMany({ orderBy: getSortOrder(sort) });
+  } catch (error) {
+    console.error("Failed to fetch products from database:", error.message);
+    return []; // fallback array kosong
+  }
 };
 
 // Func Filter Produk berdasarkan Kategori

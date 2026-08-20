@@ -1,7 +1,10 @@
 import { getProducts, getCategories } from '@/lib/data';
 
+// Refresh data setiap 60 detik sekali
+export const revalidate = 60;
+
 export default async function sitemap() {
-  const baseUrl = 'https://fitcheck-store.vercel.app'; // Replace with real production URL if known
+  const baseUrl = 'https://fitcheck-store.vercel.app';
 
   // Fetch all products and categories
   const products = await getProducts();

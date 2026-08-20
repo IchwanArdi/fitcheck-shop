@@ -2,6 +2,10 @@ import prisma from '@/lib/prisma';
 import { Package, ShoppingCart, TrendingUp, Users } from 'lucide-react';
 import Link from 'next/link';
 
+// untuk mencegah order tidak update saat di refresh halaman
+// dengan ini akan selalu mengambil data terbaru dari database
+export const dynamic = "force-dynamic";
+
 async function getStats() {
   const [productCount, userCount, orders] = await Promise.all([
     prisma.product.count(),
@@ -42,18 +46,18 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Quick Actions */}
         <div className="bg-[#111] border border-white/10 rounded-3xl p-6 lg:col-span-1">
-           <h3 className="font-bold text-lg mb-6">Quick Actions</h3>
-           <div className="space-y-4">
-             <Link href="/admin/products" className="block w-full text-center bg-white text-black font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors">Manage Products</Link>
-             <Link href="/admin/orders" className="block w-full text-center bg-white/5 border border-white/10 font-bold py-3 rounded-xl hover:bg-white/10 transition-colors">View Orders</Link>
-             <button className="w-full bg-white/5 border border-white/10 font-bold py-3 rounded-xl hover:bg-white/10 transition-colors">Internal Analytics</button>
-           </div>
+          <h3 className="font-bold text-lg mb-6">Quick Actions</h3>
+          <div className="space-y-4">
+            <Link href="/admin/products" className="block w-full text-center bg-white text-black font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors">Manage Products</Link>
+            <Link href="/admin/orders" className="block w-full text-center bg-white/5 border border-white/10 font-bold py-3 rounded-xl hover:bg-white/10 transition-colors">View Orders</Link>
+            <button className="w-full bg-white/5 border border-white/10 font-bold py-3 rounded-xl hover:bg-white/10 transition-colors">Internal Analytics</button>
+          </div>
         </div>
 
         <div className="lg:col-span-2 bg-white/5 border border-dashed border-white/10 rounded-3xl flex flex-col items-center justify-center p-12 text-center">
-            <Package className="w-12 h-12 text-gray-700 mb-4" />
-            <h4 className="font-bold text-gray-500 uppercase tracking-widest text-xs mb-2">System Notice</h4>
-            <p className="text-gray-600 text-sm max-w-sm">Dashboard simplified. External tracking removed for improved performance and privacy.</p>
+          <Package className="w-12 h-12 text-gray-700 mb-4" />
+          <h4 className="font-bold text-gray-500 uppercase tracking-widest text-xs mb-2">System Notice</h4>
+          <p className="text-gray-600 text-sm max-w-sm">Dashboard simplified. External tracking removed for improved performance and privacy.</p>
         </div>
       </div>
     </div>

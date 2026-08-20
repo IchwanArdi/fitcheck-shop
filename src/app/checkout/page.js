@@ -3,7 +3,7 @@
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Truck, CreditCard, ShieldCheck, Check } from 'lucide-react';
+import { ArrowLeft, Truck, ShieldCheck, Check } from 'lucide-react';
 import { createOrder as createOrderAction } from '@/lib/actions';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';

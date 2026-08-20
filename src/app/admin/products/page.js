@@ -1,3 +1,5 @@
+// untuk mencegah order tidak update saat di refresh halaman
+// dengan ini akan selalu mengambil data terbaru dari database
 export const dynamic = 'force-dynamic';
 
 import prisma from '@/lib/prisma';
@@ -18,8 +20,8 @@ export default async function AdminProductsPage() {
           <h2 className="text-2xl font-bold">Products</h2>
           <p className="text-gray-500 text-sm mt-1">Manage your storefront inventory.</p>
         </div>
-        <Link 
-          href="/admin/products/new" 
+        <Link
+          href="/admin/products/new"
           className="bg-white text-black font-bold px-6 py-3 rounded-xl flex items-center gap-2 hover:bg-gray-200 transition-colors"
         >
           <Plus className="w-5 h-5" />
@@ -45,13 +47,13 @@ export default async function AdminProductsPage() {
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-black border border-white/10 flex-shrink-0 flex items-center justify-center p-2 overflow-hidden relative">
-                         <Image 
-                           src={product.images?.[0] || 'https://placehold.co/100x100?text=No+Image'} 
-                           alt={product.name} 
-                           fill
-                           className="object-contain p-2" 
-                           sizes="48px"
-                         />
+                        <Image
+                          src={product.images?.[0] || 'https://placehold.co/100x100?text=No+Image'}
+                          alt={product.name}
+                          fill
+                          className="object-contain p-2"
+                          sizes="48px"
+                        />
                       </div>
                       <span className="font-bold text-gray-200">{product.name}</span>
                     </div>
@@ -69,15 +71,15 @@ export default async function AdminProductsPage() {
                   </td>
                   <td className="px-6 py-5 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Link 
-                        href={`/product/${product.id}`} 
+                      <Link
+                        href={`/product/${product.id}`}
                         target="_blank"
                         className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
                         title="View Public"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </Link>
-                      <Link 
+                      <Link
                         href={`/admin/products/edit/${product.id}`}
                         className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
                         title="Edit"
@@ -88,7 +90,7 @@ export default async function AdminProductsPage() {
                         'use server';
                         await deleteProduct(product.id);
                       }}>
-                        <button 
+                        <button
                           className="p-2 rounded-lg hover:bg-red-500/10 transition-colors text-gray-400 hover:text-red-500"
                           title="Delete"
                         >

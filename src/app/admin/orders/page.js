@@ -1,6 +1,9 @@
 import prisma from '@/lib/prisma';
 import { ShoppingBag, Clock, CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
+
+// untuk mencegah order tidak update saat di refresh halaman
+// dengan ini akan selalu mengambil data terbaru dari database
+export const dynamic = "force-dynamic";
 
 async function getOrders() {
   return await prisma.order.findMany({
