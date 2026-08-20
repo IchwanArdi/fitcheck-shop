@@ -7,9 +7,6 @@ import AnimatedGridItem from '@/components/AnimatedGridItem';
 import SortDropdown from '@/components/SortDropdown';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
-// Revalidate / refresh data setiap 60 detik sekali
-export const revalidate = 60;
-
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams.slug;
