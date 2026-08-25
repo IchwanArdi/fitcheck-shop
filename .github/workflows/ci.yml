@@ -54,6 +54,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-test
 
+    # Fungsi: Memberikan izin pada GitHub Actions untuk mengakses container registry (Docker Hub / GHCR)
+    permissions:
+      contents: read # Diperlukan untuk mengambil kode repository
+      packages: write # Diperlukan untuk menyimpan/push image
+
     steps:
       # Step 1: Checkout/Ambil kode repository
       - name: Checkout Repository
@@ -62,4 +67,32 @@ jobs:
       # Step 2: Coba build image Docker dari Dockerfile untuk memastikan tidak ada error
       - name: Build Docker Image
         run: docker build -t fitcheck-shop:ci .
+
+      # Step 3: Login ke GHCR. Hanya dijalankan saat push ke branch (bukan pull request),
+      # karena PR dari fork tidak diberi izin write oleh GitHub demi keamanan.
+      - name: Login to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      
+      # Step 4: Beri nama ulang (tag) image tadi sesuai format yang diminta GHCR,
+      # lalu push. Nama registry HARUS huruf kecil semua.
+      # Dua tag dipakai sekaligus:
+      #   :latest       -> selalu menunjuk ke build TERBARU (dipakai VPS untuk auto-pull)
+      #   :<git-sha>     -> "sidik jari" commit ini secara spesifik (dipakai untuk rollback/pelacakan)
+      - name: Tag & Push Image to GHCR
+        if: github.event_name == 'push'
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository }}
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          docker tag fitcheck-shop:ci $IMAGE_ID:latest
+          docker tag fitcheck-shop:ci $IMAGE_ID:${{ github.sha }}
+          docker push $IMAGE_ID:latest
+          docker push $IMAGE_ID:${{ github.sha }}
+
+
         
