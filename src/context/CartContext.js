@@ -19,10 +19,9 @@ export function CartProvider({ children }) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCartItems(JSON.parse(savedCart));
       } catch (e) {
-        console.error("Failed to parse cart", e);
+        console.error('Failed to parse cart', e);
       }
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoaded(true);
   }, []);
 
@@ -40,18 +39,14 @@ export function CartProvider({ children }) {
         description: `Size: ${size} • Rp ${new Intl.NumberFormat('id-ID').format(product.price)}`,
       });
     } else {
-      console.error("Toast is undefined in CartContext");
+      console.error('Toast is undefined in CartContext');
     }
 
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item.id === product.id && item.size === size);
-      
+
       if (existingItem) {
-        return prev.map((item) =>
-          item.id === product.id && item.size === size
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+        return prev.map((item) => (item.id === product.id && item.size === size ? { ...item, quantity: item.quantity + 1 } : item));
       }
       return [...prev, { ...product, size, quantity: 1 }];
     });
@@ -62,24 +57,29 @@ export function CartProvider({ children }) {
   };
 
   const updateQuantity = (id, size, change) => {
-    setCartItems((prev) => prev.map((item) => {
+    setCartItems((prev) =>
+      prev.map((item) => {
         if (item.id === id && item.size === size) {
-            const newQuantity = Math.max(1, item.quantity + change);
-            return { ...item, quantity: newQuantity };
+          const newQuantity = Math.max(1, item.quantity + change);
+          return { ...item, quantity: newQuantity };
         }
         return item;
-    }));
+      }),
+    );
   };
 
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
+  const clearCart = () => {
+    setCartItems([]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('fitcheck_cart');
+    }
+  };
+
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  return (
-    <CartContext.Provider value={{ cartItems, isCartOpen, addToCart, removeFromCart, updateQuantity, toggleCart, cartCount }}>
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={{ cartItems, isCartOpen, addToCart, removeFromCart, updateQuantity, toggleCart, cartCount, clearCart }}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {

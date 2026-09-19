@@ -9,11 +9,13 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export default function CheckoutPage() {
-
   useEffect(() => {
     // 1. Membuat element <script>
     const script = document.createElement('script');
-    script.src = 'https://app.sandbox.midtrans.com/snap/snap.js'
+    const isProd = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true';
+    script.src = isProd 
+      ? 'https://app.midtrans.com/snap/snap.js' 
+      : 'https://app.sandbox.midtrans.com/snap/snap.js';
 
     // 2. Menambahkan Atribut Key & Inject ke Body
     script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY);
@@ -31,6 +33,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [email, setEmail] = useState('');
+  const [noHp, setNoHp] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [address, setAddress] = useState('');
@@ -39,8 +42,8 @@ export default function CheckoutPage() {
   const [orderConfirmed, setOrderConfirmed] = useState(false);
   const [orderId, setOrderId] = useState(null);
 
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shipping = subtotal > 0 ? 25000 : 0; // Flat shipping rate
+  const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const shipping = subtotal > 0 ? 1000 : 0; // Flat shipping rate
   const total = subtotal + shipping;
 
   const handleSubmit = async (e) => {
@@ -51,37 +54,52 @@ export default function CheckoutPage() {
     const customerData = {
       name: `${firstName} ${lastName}`,
       email,
+      noHp,
       address,
       city,
-      postalCode
+      postalCode,
     };
     const result = await createOrderAction(customerData, cartItems, total);
 
     if (result.success && result.snapToken) {
       window.snap.pay(result.snapToken, {
-        onSuccess: function (midtransResult) {
-          toast.success("Pembayaran Sukses!");
+        onSuccess: async function (midtransResult) {
+          toast.success('Pembayaran Sukses!');
           setOrderId(result.orderId);
           setIsSubmitting(false);
           setOrderConfirmed(true);
           clearCart();
+
+          // Otomatis ubah status pesanan di database menjadi "paid"
+          try {
+            await fetch(`/api/orders/${result.orderId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'paid' })
+            });
+          } catch (err) {
+            console.error('Gagal update status otomatis:', err);
+          }
+
+          // Arahkan ke halaman Order Confirmed (Halaman Konfirmasi & Sukses)
+          window.location.href = `/order-confirmed/${result.orderId}`;
         },
         onPending: function (midtransResult) {
-          toast.info("Menunggu pembayaran...");
+          toast.info('Menunggu pembayaran...');
           setIsSubmitting(false);
         },
         onError: function (midtransResult) {
-          toast.error("Pembayaran Gagal!");
+          toast.error('Pembayaran Gagal!');
           setIsSubmitting(false);
         },
         onClose: function () {
-          toast.info("Anda menutup pop-up sebelum membayar.");
-          setIsSubmitting(false);
-        }
+          clearCart();
+          window.location.href = `/order-confirmed/${result.orderId}`;
+        },
       });
     } else {
       setIsSubmitting(false);
-      toast.error("Order failed. Please try again.");
+      toast.error('Order failed. Please try again.');
     }
   };
 
@@ -98,12 +116,12 @@ export default function CheckoutPage() {
             <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Order ID</p>
             <p className="font-mono text-sm">#{orderId}</p>
           </div>
-          <div className="pt-4">
-            <Link
-              href="/"
-              className="inline-block w-full bg-white text-black font-extrabold py-4 rounded-full uppercase tracking-widest hover:bg-gray-200 transition-all"
-            >
-              Back to Store
+          <div className="pt-4 space-y-3">
+            <Link href={`/orders/${orderId}`} className="inline-block w-full bg-blue-600 text-white font-extrabold py-4 rounded-full uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/30">
+              Lacak Pesanan Saya
+            </Link>
+            <Link href="/" className="inline-block w-full bg-white/10 text-white font-bold py-3.5 rounded-full uppercase tracking-widest hover:bg-white/20 transition-all border border-white/10 text-xs">
+              Kembali ke Toko
             </Link>
           </div>
         </div>
@@ -111,7 +129,8 @@ export default function CheckoutPage() {
     );
   }
 
-  if (cartCount === 0 && !isSubmitting) { // Changed isProcessing to isSubmitting
+  if (cartCount === 0 && !isSubmitting) {
+    // Changed isProcessing to isSubmitting
     return (
       <div className="mx-auto max-w-7xl px-4 md:px-6 py-20 text-center">
         <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
@@ -126,7 +145,6 @@ export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-6 py-12 md:py-20">
       <div className="flex flex-col lg:flex-row gap-12">
-
         {/* Left: Checkout Form */}
         <div className="flex-1">
           <Link href="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-8 transition-colors w-fit">
@@ -143,13 +161,21 @@ export default function CheckoutPage() {
                 <span className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-sm font-bold">1</span>
                 Contact Information
               </h2>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
                   required
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email Address"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                />
+                <input
+                  required
+                  type="tel"
+                  value={noHp}
+                  onChange={(e) => setNoHp(e.target.value)}
+                  placeholder="081xxxxxxxxx"
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
@@ -220,35 +246,28 @@ export default function CheckoutPage() {
               </div>
             </section>
 
-            <button
-              disabled={isSubmitting}
-              className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
+            <button disabled={isSubmitting} className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
               {isSubmitting ? 'Processing...' : `Pay Rp ${new Intl.NumberFormat('id-ID').format(total)}`}
             </button>
           </form>
         </div>
 
         {/* Right: Order Summary */}
-        <div className="lg:w-[400px]">
+        <div className="lg:w-100">
           <div className="bg-[#111] border border-white/5 rounded-2xl p-6 sticky top-32">
             <h2 className="text-xl font-bold mb-6">Order Summary</h2>
 
             <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2 no-scrollbar">
               {cartItems.map((item) => (
                 <div key={`${item.id}-${item.size}`} className="flex gap-4">
-                  <div className="w-16 h-16 bg-white/5 border border-white/5 rounded-lg overflow-hidden flex-shrink-0 relative">
-                    <Image
-                      src={item.images?.[0] || item.image || 'https://placehold.co/200x200/111/FFF?text=No+Image'}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                      sizes="64px"
-                    />
+                  <div className="w-16 h-16 bg-white/5 border border-white/5 rounded-lg overflow-hidden shrink-0 relative">
+                    <Image src={item.images?.[0] || item.image || 'https://placehold.co/200x200/111/FFF?text=No+Image'} alt={item.name} fill className="object-cover" sizes="64px" />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-sm font-bold truncate">{item.name}</h3>
-                    <p className="text-xs text-gray-500">Qty: {item.quantity} • Size: {item.size}</p>
+                    <p className="text-xs text-gray-500">
+                      Qty: {item.quantity} • Size: {item.size}
+                    </p>
                   </div>
                   <p className="text-sm font-medium">Rp {new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}</p>
                 </div>
@@ -278,7 +297,6 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
