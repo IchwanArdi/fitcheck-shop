@@ -57,7 +57,9 @@ export async function POST(request) {
         message: "Order created successfully",
         orderId: result.orderId,
         snapToken: result.snapToken,
-        redirectUrl: result.snapToken ? `https://app.sandbox.midtrans.com/snap/v2/vtweb/${result.snapToken}` : null
+        redirectUrl: result.snapToken 
+          ? `https://app.${process.env.MIDTRANS_IS_PRODUCTION === 'true' ? '' : 'sandbox.'}midtrans.com/snap/v2/vtweb/${result.snapToken}` 
+          : null
       },
       { status: 201 }
     );

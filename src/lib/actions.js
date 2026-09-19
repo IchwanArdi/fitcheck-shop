@@ -2,22 +2,15 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import midtransClient from 'midtrans-client'
+import { snap, getBaseUrl } from '@/lib/midtrans';
 import { cookies } from 'next/headers';
-
-// Setup Midtrans Client
-const snap = new midtransClient.Snap({
-  isProduction: false,
-  serverKey: process.env.MIDTRANS_SERVER_KEY,
-  clientKey: process.env.MIDTRANS_CLIENT_KEY
-});
 
 // Func Login
 export async function loginAdminAction(email, password) {
   try {
     // 1. Cari user berdasarkan email di database
     const user = await prisma.user.findUnique({
-      where: { email: email }
+      where: { email: email },
     });
 
     // 2. Jika user tidak ditemukan
@@ -66,10 +59,14 @@ export async function createProduct(formData) {
   const price = parseInt(formData.get('price'));
   const category = formData.get('category');
   const description = formData.get('description');
-  const images = formData.get('images').split(',').map(img => img.trim()).filter(img => img !== '');
+  const images = formData
+    .get('images')
+    .split(',')
+    .map((img) => img.trim())
+    .filter((img) => img !== '');
 
   await prisma.product.create({
-    data: { id, name, price, category, description, images }
+    data: { id, name, price, category, description, images },
   });
 
   revalidatePath('/admin/products');
@@ -79,7 +76,7 @@ export async function createProduct(formData) {
 // Func Hapus Produk
 export async function deleteProduct(id) {
   await prisma.product.delete({
-    where: { id }
+    where: { id },
   });
   revalidatePath('/admin/products');
   revalidatePath('/');
@@ -91,11 +88,15 @@ export async function updateProduct(id, formData) {
   const price = parseInt(formData.get('price'));
   const category = formData.get('category');
   const description = formData.get('description');
-  const images = formData.get('images').split(',').map(img => img.trim()).filter(img => img !== '');
+  const images = formData
+    .get('images')
+    .split(',')
+    .map((img) => img.trim())
+    .filter((img) => img !== '');
 
   await prisma.product.update({
     where: { id },
-    data: { name, price, category, description, images }
+    data: { name, price, category, description, images },
   });
 
   revalidatePath('/admin/products');
@@ -111,48 +112,51 @@ export async function createOrder(customerData, items, total) {
         total,
         customer: customerData,
         items: {
-          create: items.map(item => ({
+          create: items.map((item) => ({
             productId: item.id,
             name: item.name,
             price: item.price,
-            quantity: item.quantity
-          }))
-        }
-      }
+            quantity: item.quantity,
+          })),
+        },
+      },
     });
 
     // Hitung subtotal untuk mengecek apakah ada biaya tambahan (misal: ongkir)
-    const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const shippingCost = total - subtotal;
 
-    let itemDetails = items.map(item => ({
-      "id": item.id,
-      "name": item.name.substring(0, 50), // Midtrans membatasi nama item maksimal 50 karakter
-      "price": item.price,
-      "quantity": item.quantity
+    let itemDetails = items.map((item) => ({
+      id: item.id,
+      name: item.name.substring(0, 50), // Midtrans membatasi nama item maksimal 50 karakter
+      price: item.price,
+      quantity: item.quantity,
     }));
 
     if (shippingCost > 0) {
       itemDetails.push({
-        "id": "shipping-fee",
-        "name": "Biaya Pengiriman",
-        "price": shippingCost,
-        "quantity": 1
+        id: 'shipping-fee',
+        name: 'Biaya Pengiriman',
+        price: shippingCost,
+        quantity: 1,
       });
     }
 
     // 2.Siapkan Parameter Transaksi untuk Midtrans
     let parameter = {
-      "transaction_details": {
-        "order_id": order.id,
-        "gross_amount": total // Total harga (wajib number)
+      transaction_details: {
+        order_id: order.id,
+        gross_amount: total, // Total harga (wajib number)
       },
-      "customer_details": {
-        "first_name": customerData.name || "Customer",
-        "email": customerData.email || "test@example.com",
-        "phone": customerData.phone || "08123456789"
+      customer_details: {
+        first_name: customerData.name || 'Customer',
+        email: customerData.email || 'test@example.com',
+        phone: customerData.noHp || '08123456789',
       },
-      "item_details": itemDetails
+      item_details: itemDetails,
+      callbacks: {
+        finish: `${getBaseUrl()}/order-confirmed/${order.id}`,
+      },
     };
 
     // 3. Minta Token Pembayaran ke Midtrans (Snap API)

@@ -4,7 +4,7 @@ import { getProducts, getCategories } from '@/lib/data';
 export const revalidate = 60;
 
 export default async function sitemap() {
-  const baseUrl = 'https://fitcheck-store.vercel.app';
+  const baseUrl = 'https://fitcheckofficial.vercel.app';
 
   // Fetch all products and categories
   const products = await getProducts();
