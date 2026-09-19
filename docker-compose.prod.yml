@@ -1,0 +1,9 @@
+services:
+  app:
+    image: ghcr.io/ichwanardi/fitcheck-shop:latest
+    container_name: fitcheck-shop-container
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    restart: unless-stopped
