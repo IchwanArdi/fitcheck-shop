@@ -14,8 +14,9 @@ export default function CheckoutPage() {
   const snapScriptUrl = isProd ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js';
   const snapClientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '';
 
-  const { cartItems, cartCount, clearCart } = useCart(); // Removed createOrder from here
+  const { cartItems, cartCount, clearCart } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [snapReady, setSnapReady] = useState(false);
 
   const [email, setEmail] = useState('');
   const [noHp, setNoHp] = useState('');
@@ -28,14 +29,33 @@ export default function CheckoutPage() {
   const [orderId, setOrderId] = useState(null);
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const shipping = subtotal > 0 ? 1000 : 0; // Flat shipping rate
+  const shipping = subtotal > 0 ? 1000 : 0;
   const total = subtotal + shipping;
+
+  // Tunggu sampai Midtrans Snap.js selesai dimuat di browser.
+  // Perlu mekanisme retry karena script external butuh waktu load,
+  // terutama di production (Vercel/VPS) yang punya network latency.
+  const waitForSnap = () =>
+    new Promise((resolve, reject) => {
+      if (window.snap) return resolve();
+      let attempts = 0;
+      const maxAttempts = 50; // 50 x 200ms = 10 detik timeout
+      const interval = setInterval(() => {
+        if (window.snap) {
+          clearInterval(interval);
+          resolve();
+        }
+        if (++attempts >= maxAttempts) {
+          clearInterval(interval);
+          reject(new Error('Midtrans Snap gagal dimuat. Coba refresh halaman.'));
+        }
+      }, 200);
+    });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate payment process and save to DB
     const customerData = {
       name: `${firstName} ${lastName}`,
       email,
@@ -47,6 +67,15 @@ export default function CheckoutPage() {
     const result = await createOrderAction(customerData, cartItems, total);
 
     if (result.success && result.snapToken) {
+      // Pastikan Snap.js sudah siap sebelum buka popup pembayaran
+      try {
+        await waitForSnap();
+      } catch (snapError) {
+        setIsSubmitting(false);
+        toast.error(snapError.message);
+        return;
+      }
+
       window.snap.pay(result.snapToken, {
         onSuccess: async function (midtransResult) {
           toast.success('Pembayaran Sukses!');
@@ -66,7 +95,7 @@ export default function CheckoutPage() {
             console.error('Gagal update status otomatis:', err);
           }
 
-          // Arahkan ke halaman Order Confirmed (Halaman Konfirmasi & Sukses)
+          // Arahkan ke halaman Order Confirmed
           window.location.href = `/order-confirmed/${result.orderId}`;
         },
         onPending: function (midtransResult) {
@@ -78,8 +107,12 @@ export default function CheckoutPage() {
           setIsSubmitting(false);
         },
         onClose: function () {
-          clearCart();
-          window.location.href = `/order-confirmed/${result.orderId}`;
+          // User menutup popup tanpa menyelesaikan pembayaran.
+          // JANGAN hapus cart — user mungkin ingin coba bayar lagi nanti.
+          // Redirect ke halaman order agar bisa lihat status "pending".
+          toast.info('Pembayaran belum selesai. Anda bisa melanjutkan pembayaran nanti.');
+          setIsSubmitting(false);
+          window.location.href = `/orders/${result.orderId}`;
         },
       });
     } else {
@@ -129,7 +162,12 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <Script src={snapScriptUrl} strategy="beforeInteractive" data-client-key={snapClientKey} />
+      <Script
+        src={snapScriptUrl}
+        strategy="afterInteractive"
+        data-client-key={snapClientKey}
+        onReady={() => setSnapReady(true)}
+      />
 
       <div className="mx-auto max-w-7xl px-4 md:px-6 py-12 md:py-20">
         <div className="flex flex-col lg:flex-row gap-12">
