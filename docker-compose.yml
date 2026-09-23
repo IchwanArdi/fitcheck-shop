@@ -3,6 +3,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Build-time args: Next.js inline NEXT_PUBLIC_* ke bundle JS saat build.
+        # Nilai dibaca dari file .env secara otomatis oleh Docker Compose.
+        NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION: ${NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION}
+        NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: ${NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
     container_name: fitcheck-shop-container
     ports:
       - '3000:3000'

@@ -31,6 +31,17 @@ COPY . .
 # bukan konek ke DB betulan — nilai dummy di sini aman.
 ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db"
 
+# NEXT_PUBLIC_* wajib tersedia saat build karena Next.js melakukan inline
+# variabel ini ke dalam bundle JavaScript yang dikirim ke browser.
+# Kalau tidak ada saat build, nilainya jadi undefined di production.
+ARG NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION=false
+ARG NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
+ARG NEXT_PUBLIC_BASE_URL
+
+ENV NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION=$NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION
+ENV NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=$NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+
 # Generate Prisma client untuk production
 RUN npx prisma generate
 
