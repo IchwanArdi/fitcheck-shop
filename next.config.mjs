@@ -20,7 +20,6 @@ const nextConfig = {
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              'upgrade-insecure-requests',
             ].join('; '),
           },
         ],
